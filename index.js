@@ -6,6 +6,7 @@ const { join } = require('path');
 const { Buffer } = require('buffer');
 const { v4: uuidv4 } = require('uuid');
 
+
 app.use(express.json());
 app.use(cors({
   origin: 'https://potloodgum.com',
@@ -37,6 +38,11 @@ app.post('/image_processing', (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+// listen to for public/images and serve the images in a list
+app.get('/images', (req, res) => {
+  res.sendFile(join(__dirname, 'public/images'));
+})
 
 const port = 5000; // Change the port as needed
 app.listen(port, () => {
