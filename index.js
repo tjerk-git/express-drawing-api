@@ -4,6 +4,8 @@ const cors = require('cors');
 const postmark = require('postmark');
 require('dotenv').config();
 
+const debug = require("debug")("author");
+
 app.use(express.json());
 app.use(cors({
   origin: process.env.CORS_ALLOWED
@@ -18,6 +20,7 @@ app.post('/image_processing', (req, res) => {
   try {
     const data = req.body;
     if (!data || !data.image) {
+      debug(`No data: ${req.body}`);
       return res.status(400).json({ error: 'Invalid JSON data' });
     }
 
@@ -54,13 +57,15 @@ function sendEmail(imageBuffer) {
   postmarkClient.sendEmail(emailOptions)
     .then((result) => {
       console.log('Email sent:', result);
+      debug(`Email sent ${result}`);
     })
     .catch((error) => {
       console.log('Error sending email:', error.message);
+      debug(`Email not send ${error.message}`);
     });
 }
 
-const port = 1337; // Change the port as needed
+const port = 8080; // Change the port as needed
 app.listen(port, () => {
   console.log(`Server started on http://localhost:${port}`);
 });
