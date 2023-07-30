@@ -7,25 +7,26 @@ require('dotenv').config();
 const debug = require("debug")("author");
 
 app.use(express.json());
-app.use(cors({
-  origin: process.env.CORS_ALLOWED
-}));
+// app.use(cors({
+//   origin: process.env.CORS_ALLOWED
+// }));
 
-// method that generates a random name based on the current time and adds .png behind it
 function generateRandomName() {
   return `${Date.now()}.png`;
 }
 
+
+
 app.post('/image_processing', (req, res) => {
+
   try {
     const data = req.body;
     if (!data || !data.image) {
       debug(`No data: ${req.body}`);
       return res.status(400).json({ error: 'Invalid JSON data' });
     }
-
     const imageBuffer = data.image.split(',')[1];
-    sendEmail(imageBuffer);
+    sendEmail(imageBuffer, data.email);
 
     return res.status(200).json({ message: 'POST request successful' });
   } catch (err) {
@@ -33,22 +34,27 @@ app.post('/image_processing', (req, res) => {
   }
 });
 
-// Function to send email with attachment
-function sendEmail(imageBuffer) {
+function sendEmail(imageBuffer, email) {
+
+  debug(`sending email with attachment`);
+
+  if (!email) {
+    email = "empty string i guess";
+  }
 
   const postmarkClient = new postmark.ServerClient(process.env.POSTMARK_API_KEY);
 
   const emailOptions = {
-    From: 'appointments@hamaki.pro', // Replace with your email address
-    To: 'tjerk.dijkstra@icloud.com', // Replace with the recipient's email address
+    From: 'appointments@hamaki.pro',
+    To: 'tjerk.dijkstra@icloud.com',
     Subject: 'Image Attachment',
-    TextBody: 'Here is the image you requested!',
+    TextBody: `A new artwork from potloodgum.com author: ${email}`,
     MessageStream: 'outbound',
   };
 
   const attachment = {
-    Name: generateRandomName(), // You can customize the attachment filename here
-    Content: imageBuffer, // File path to the image on your server
+    Name: generateRandomName(),
+    Content: imageBuffer,
     ContentType: 'image/png',
   };
 
@@ -65,7 +71,8 @@ function sendEmail(imageBuffer) {
     });
 }
 
-const port = 8080; // Change the port as needed
+const port = process.env.PORT || 3000;
+
 app.listen(port, () => {
   console.log(`Server started on http://localhost:${port}`);
 });
