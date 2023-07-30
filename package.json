@@ -4,13 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "author": "Tjerk Dijkstra",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "nodemailer": "^6.9.4",
+    "nodemailer-smtp-transport": "^2.7.4",
+    "nodemon": "^3.0.1",
+    "postmark": "^3.0.18",
     "uuid": "^9.0.0"
   }
 }

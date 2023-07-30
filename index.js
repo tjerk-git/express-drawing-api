@@ -1,15 +1,12 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { createWriteStream } = require('fs');
-const { join } = require('path');
-const { Buffer } = require('buffer');
-const { v4: uuidv4 } = require('uuid');
-
+const postmark = require('postmark');
+require('dotenv').config();
 
 app.use(express.json());
 app.use(cors({
-  origin: 'https://potloodgum.com',
+  origin: process.env.CORS_ALLOWED
 }));
 
 // method that generates a random name based on the current time and adds .png behind it
@@ -24,14 +21,8 @@ app.post('/image_processing', (req, res) => {
       return res.status(400).json({ error: 'Invalid JSON data' });
     }
 
-    // convert data64 into image and save it to disk
-    const imageBuffer = Buffer.from(data.image.split(',')[1], 'base64');
-    const imageName = 'public/images/' + generateRandomName();
-    const imagePath = join(__dirname, imageName);
-
-    const writeStream = createWriteStream(imagePath);
-    writeStream.write(imageBuffer);
-    writeStream.end();
+    const imageBuffer = data.image.split(',')[1];
+    sendEmail(imageBuffer);
 
     return res.status(200).json({ message: 'POST request successful' });
   } catch (err) {
@@ -39,12 +30,37 @@ app.post('/image_processing', (req, res) => {
   }
 });
 
-// listen to for public/images and serve the images in a list
-app.get('/images', (req, res) => {
-  res.sendFile(join(__dirname, 'public/images'));
-})
+// Function to send email with attachment
+function sendEmail(imageBuffer) {
 
-const port = 5000; // Change the port as needed
+  const postmarkClient = new postmark.ServerClient(process.env.POSTMARK_API_KEY);
+
+  const emailOptions = {
+    From: 'appointments@hamaki.pro', // Replace with your email address
+    To: 'tjerk.dijkstra@icloud.com', // Replace with the recipient's email address
+    Subject: 'Image Attachment',
+    TextBody: 'Here is the image you requested!',
+    MessageStream: 'outbound',
+  };
+
+  const attachment = {
+    Name: generateRandomName(), // You can customize the attachment filename here
+    Content: imageBuffer, // File path to the image on your server
+    ContentType: 'image/png',
+  };
+
+  emailOptions.Attachments = [attachment];
+
+  postmarkClient.sendEmail(emailOptions)
+    .then((result) => {
+      console.log('Email sent:', result);
+    })
+    .catch((error) => {
+      console.log('Error sending email:', error.message);
+    });
+}
+
+const port = 1337; // Change the port as needed
 app.listen(port, () => {
   console.log(`Server started on http://localhost:${port}`);
 });
